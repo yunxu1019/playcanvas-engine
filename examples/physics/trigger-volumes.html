@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Trigger Volumes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <script src="../../build/output/playcanvas-extras.js"></script>
+    <script src="../wasm-loader.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body onload="main()">
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var app;
+        var fontAsset;
+        var transparentGreen, transparentWhite;
+
+        function main() {
+            var canvas = document.getElementById("application-canvas");
+
+            // Create the application and start the update loop
+            app = new pc.Application(canvas);
+
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
+            app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+            var miniStats = new pc.MiniStats(app);
+
+            if (wasmSupported()) {
+                loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', preload);
+            } else {
+                loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', preload);
+            }
+        }
+
+        function preload() {
+            // Load a font
+            fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+            fontAsset.on('load', function () {
+                start();
+            });
+            app.assets.add(fontAsset);
+            app.assets.load(fontAsset);
+        }
+
+        function createMaterial(diffuse, opacity) {
+            var material = new pc.StandardMaterial();
+            material.diffuse = diffuse;
+            material.opacity = opacity;
+            material.blendType = opacity < 1 ? pc.BLEND_NORMAL : pc.BLEND_NONE;
+            material.update()
+
+            return material;
+        }
+
+        function createScripts() {
+            //
+            // Script 1: Set the color of a trigger entity on enter/leave events
+            //
+            var Trigger = pc.createScript('trigger');
+
+            Trigger.prototype.initialize = function () {
+                this.entity.collision.on('triggerenter', function (entity) {
+                    this.entity.model.material = transparentGreen;
+                });
+                this.entity.collision.on('triggerleave', function (entity) {
+                    this.entity.model.material = transparentWhite;
+                });
+            };
+
+            //
+            // Script 2: Reset a rigid body to its start position every 2 seconds
+            //
+            var ResetBody = pc.createScript('resetBody');
+
+            ResetBody.prototype.initialize = function () {
+                this.time = 0;
+                this.startPos = this.entity.getPosition().clone();
+            };
+
+            ResetBody.prototype.update = function (dt) {
+                this.time += dt;
+                if (this.time > 2) {
+                    this.entity.rigidbody.teleport(this.startPos);
+                    this.entity.rigidbody.linearVelocity = pc.Vec3.ZERO;
+                    this.entity.rigidbody.angularVelocity = pc.Vec3.ZERO;
+                    this.time = 0;
+                }
+            }
+
+            //
+            // Script 3: Translate an entity by a sine function in any given axis
+            //
+            var SineTranslate = pc.createScript('sineTranslate');
+
+            SineTranslate.attributes.add('axis', { type: 'number', default: 0 });
+            SineTranslate.attributes.add('amplitude', { type: 'number', default: 1 });
+
+            SineTranslate.prototype.initialize = function () {
+                this.time = 0;
+                this.startPos = this.entity.getPosition().clone();
+            };
+
+            SineTranslate.prototype.update = function (dt) {
+                this.time += dt;
+                var offset = Math.sin(this.time) * this.amplitude;
+
+                this.entity.setPosition(this.startPos);
+                this.entity.translate(
+                    this.axis === 0 ? offset : 0,
+                    this.axis === 1 ? offset : 0,
+                    this.axis === 2 ? offset : 0
+                );
+            }
+        }
+
+        function start() {
+            app.start();
+
+            // Create some materials for our objects
+            var gray = createMaterial(new pc.Color(0.7, 0.7, 0.7), 1);
+            transparentGreen = createMaterial(new pc.Color(0.3, 1, 0.3), 0.25);
+            transparentWhite = createMaterial(new pc.Color(1, 1, 1), 0.1);
+
+            // Create a register scripts to assign to entities
+            createScripts();
+
+            // Define a scene hierarchy in JSON format. This is loaded/parsed in
+            // the parseScene function below
+            var scene = [
+                                    {
+                            name: 'Label',
+                            pos: [ 0, 0, 2 ],
+                            components: [
+                                {
+                                    type: 'element',
+                                    options: {
+                                        anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+                                        fontAsset: fontAsset,
+                                        fontSize: 0.5,
+                                        pivot: [ 0.5, 0.5 ],
+                                        text: 'Trigger 1',
+                                        type: pc.ELEMENTTYPE_TEXT
+                                    }
+                                }
+                            ]
+                        },
+
+                {
+                    name: 'Trigger 1',
+                    pos: [-2, 1.5, 0],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'box'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'box',
+                                castShadows: false,
+                                material: transparentWhite
+                            }
+                        }, {
+                            type: 'script',
+                            options: {
+                                order: [
+                                  "trigger", "sineTranslate"
+                                ],
+                                scripts: {
+                                    trigger: {
+                                        attributes: {}
+                                    },
+                                    sineTranslate: {
+                                        attributes: {
+                                            axis: 1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Trigger 2',
+                    pos: [0, 0.5, 0],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'box'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'box',
+                                castShadows: false,
+                                material: transparentWhite
+                            }
+                        }, {
+                            type: 'script',
+                            options: {
+                                order: [
+                                  "trigger"
+                                ],
+                                scripts: {
+                                    trigger: {
+                                        attributes: {}
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Trigger 3',
+                    pos: [2, 0.5, 0],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'box'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'box',
+                                castShadows: false,
+                                material: transparentWhite
+                            }
+                        }, {
+                            type: 'script',
+                            options: {
+                                order: [
+                                  "trigger"
+                                ],
+                                scripts: {
+                                    trigger: {
+                                        attributes: {}
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Static Sphere',
+                    pos: [ -2, 0.5, 0 ],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }, {
+                            type: 'rigidbody',
+                            options: {
+                                type: 'static'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Dynamic Sphere',
+                    pos: [ 0, 5, 0 ],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }, {
+                            type: 'rigidbody',
+                            options: {
+                                type: 'dynamic'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }, {
+                            type: 'script',
+                            options: {
+                                order: [
+                                  "resetBody"
+                                ],
+                                scripts: {
+                                    resetBody: {
+                                        attributes: {}
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Kinematic Sphere',
+                    pos: [ 2, 0.5, 0 ],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }, {
+                            type: 'rigidbody',
+                            options: {
+                                type: 'kinematic'
+                            }
+                        }, {
+                            type: 'model',
+                            options: {
+                                type: 'sphere'
+                            }
+                        }, {
+                            type: 'script',
+                            options: {
+                                order: [
+                                  "sineTranslate"
+                                ],
+                                scripts: {
+                                    sineTranslate: {
+                                        attributes: {
+                                            axis: 2,
+                                            amplitude: 1.5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Ground',
+                    pos: [ 0, -0.5, 0 ],
+                    components: [
+                        {
+                            type: 'collision',
+                            options: {
+                                type: 'box',
+                                halfExtents: [ 5, 0.5, 5 ]
+                            }
+                        }, {
+                            type: 'rigidbody',
+                            options: {
+                                type: 'static',
+                                restitution: 0.5
+                            }
+                        }
+                    ],
+                    children: [
+                        {
+                            name: 'Ground Model',
+                            scl: [ 10, 1, 10 ],
+                            components: [
+                                {
+                                    type: 'model',
+                                    options: {
+                                        type: 'box',
+                                        material: gray
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }, {
+                    name: 'Directional Light',
+                    rot: [ 45, 30, 0 ],
+                    components: [
+                        {
+                            type: 'light',
+                            options: {
+                                type: 'directional',
+                                castShadows: true,
+                                shadowDistance: 8,
+                                shadowBias: 0.1,
+                                normalOffsetBias: 0.05
+                            }
+                        }
+                    ]
+                }, {
+                    name: 'Camera',
+                    pos: [ 0, 4, 7 ],
+                    rot: [ -30, 0, 0 ],
+                    components: [
+                        {
+                            type: 'camera',
+                            options: {
+                                color: [ 0.5, 0.5, 0.5 ]
+                            }
+                        }
+                    ]
+                }
+            ];
+
+            // Convert an entity definition in the structure above to a pc.Entity object
+            function parseEntity(e) {
+                var entity = new pc.Entity(e.name);
+
+                if (e.pos) {
+                    entity.setLocalPosition(e.pos[0], e.pos[1], e.pos[2]);
+                }
+                if (e.rot) {
+                    entity.setLocalEulerAngles(e.rot[0], e.rot[1], e.rot[2]);
+                }
+                if (e.scl) {
+                    entity.setLocalScale(e.scl[0], e.scl[1], e.scl[2]);
+                }
+
+                if (e.components) {
+                    e.components.forEach(function (c) {
+                        entity.addComponent(c.type, c.options);
+                    });
+                }
+
+                if (e.children) {
+                    e.children.forEach(function (child) {
+                        entity.addChild(parseEntity(child));
+                    });
+                }
+
+                return entity;
+            }
+
+            // Parse the scene data above into entities and add them to the scene's root entity
+            function parseScene(s) {
+                s.forEach(function (e) {
+                    app.root.addChild(parseEntity(e));
+                });
+            }
+
+            parseScene(scene);
+        }
+    </script>
+</body>
+</html>
