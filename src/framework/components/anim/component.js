@@ -13,7 +13,6 @@ import { AnimController } from './controller.js';
 import { AnimStateGraph } from './state-graph.js';
 
 /**
- * @private
  * @component Anim
  * @class
  * @name pc.AnimComponent
@@ -33,7 +32,6 @@ AnimComponent.prototype.constructor = AnimComponent;
 
 Object.assign(AnimComponent.prototype, {
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#loadStateGraph
      * @description Initialises component animation controllers using the provided state graph.
@@ -121,7 +119,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#removeStateGraph
      * @description Removes all layers from the anim component.
@@ -146,7 +143,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#reset
      * @description Reset all of the components layers and parameters to their initial states. If a layer was playing before it will continue playing
@@ -161,7 +157,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#findAnimationLayer
      * @description Finds a pc.AnimComponentLayer in this component.
@@ -174,7 +169,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#assignAnimation
      * @description Associates an animation with a state in the loaded state graph. If all states are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
@@ -200,7 +194,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#removeStateAnimations
      * @description Removes animations from a state in the loaded state graph.
@@ -240,7 +233,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#getFloat
      * @description Returns a float parameter value by name.
@@ -252,7 +244,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#setFloat
      * @description Sets the value of a float parameter that was defined in the animation components state graph.
@@ -264,7 +255,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#getInteger
      * @description Returns an integer parameter value by name.
@@ -276,7 +266,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#setInteger
      * @description Sets the value of an integer parameter that was defined in the animation components state graph.
@@ -294,7 +283,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#getBoolean
      * @description Returns a boolean parameter value by name.
@@ -306,7 +294,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#setBoolean
      * @description Sets the value of a boolean parameter that was defined in the animation components state graph.
@@ -318,7 +305,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#getTrigger
      * @description Returns a trigger parameter value by name.
@@ -330,7 +316,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#setTrigger
      * @description Sets the value of a trigger parameter that was defined in the animation components state graph to true.
@@ -341,7 +326,6 @@ Object.assign(AnimComponent.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponent#setTrigger
      * @description Resets the value of a trigger parameter that was defined in the animation components state graph to false.
@@ -354,7 +338,6 @@ Object.assign(AnimComponent.prototype, {
 
 Object.defineProperties(AnimComponent.prototype, {
     /**
-     * @private
      * @name pc.AnimComponent#stateGraphAsset
      * @type {number}
      * @description The state graph asset this component should use to generate it's animation state graph
@@ -409,7 +392,6 @@ Object.defineProperties(AnimComponent.prototype, {
         }
     },
     /**
-     * @private
      * @name pc.AnimComponent#animationAssets
      * @type {object}
      * @description The animation assets used to load each states animation tracks
@@ -424,7 +406,6 @@ Object.defineProperties(AnimComponent.prototype, {
         }
     },
     /**
-     * @private
      * @name pc.AnimComponent#playable
      * @type {boolean}
      * @readonly
@@ -441,7 +422,6 @@ Object.defineProperties(AnimComponent.prototype, {
         }
     },
     /**
-     * @private
      * @name pc.AnimComponent#baseLayer
      * @type {pc.AnimComponentLayer}
      * @readonly

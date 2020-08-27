@@ -3,7 +3,6 @@ import { http, Http } from '../net/http.js';
 import { AnimCurve, AnimData, AnimTrack } from '../anim/anim.js';
 
 /**
- * @private
  * @class
  * @name pc.AnimClipHandler
  * @implements {pc.ResourceHandler}

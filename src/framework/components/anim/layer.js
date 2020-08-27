@@ -1,7 +1,6 @@
 import { AnimTrack } from '../../../anim/anim.js';
 
 /**
- * @private
  * @class
  * @name pc.AnimComponentLayer
  * @classdesc The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -18,7 +17,6 @@ function AnimComponentLayer(name, controller, component) {
 
 Object.assign(AnimComponentLayer.prototype, {
     /**
-     * @private
      * @function
      * @name pc.AnimComponentLayer#play
      * @description Start playing the animation in the current state.
@@ -29,7 +27,6 @@ Object.assign(AnimComponentLayer.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponentLayer#pause
      * @description Start playing the animation in the current state.
@@ -39,7 +36,6 @@ Object.assign(AnimComponentLayer.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponentLayer#reset
      * @description Reset the animation component to it's initial state, including all parameters. The system will be paused.
@@ -53,7 +49,6 @@ Object.assign(AnimComponentLayer.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponentLayer#assignAnimation
      * @description Associates an animation with a state node in the loaded state graph. If all states nodes are linked and the pc.AnimComponent.activate value was set to true then the component will begin playing.
@@ -74,7 +69,6 @@ Object.assign(AnimComponentLayer.prototype, {
     },
 
     /**
-     * @private
      * @function
      * @name pc.AnimComponentLayer#removeNodeAnimations
      * @description Removes animations from a node in the loaded state graph.
@@ -88,7 +82,6 @@ Object.assign(AnimComponentLayer.prototype, {
 
 Object.defineProperties(AnimComponentLayer.prototype, {
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#name
      * @type {string}
@@ -100,7 +93,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @name pc.AnimComponentLayer#playing
      * @type {string}
      * @description Whether this layer is currently playing
@@ -114,7 +106,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#playable
      * @type {string}
@@ -126,7 +117,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#activeState
      * @type {string}
@@ -138,7 +128,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#previousState
      * @type {string}
@@ -150,7 +139,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#activeStateProgress
      * @type {number}
@@ -162,7 +150,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#activeStateDuration
      * @type {number}
@@ -174,7 +161,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#activeStateCurrentTime
      * @type {number}
@@ -189,7 +175,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#transitioning
      * @type {boolean}
@@ -201,7 +186,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#transitionProgress
      * @type {number}
@@ -216,7 +200,6 @@ Object.defineProperties(AnimComponentLayer.prototype, {
         }
     },
     /**
-     * @private
      * @readonly
      * @name pc.AnimComponentLayer#states
      * @type {string[]}

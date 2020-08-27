@@ -3,7 +3,6 @@ import { http, Http } from '../net/http.js';
 import { AnimStateGraph } from '../framework/components/anim/state-graph.js';
 
 /**
- * @private
  * @class
  * @name pc.AnimStateGraphHandler
  * @implements {pc.ResourceHandler}
