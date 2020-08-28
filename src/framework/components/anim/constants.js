@@ -40,7 +40,6 @@ export var ANIM_INTERRUPTION_NEXT_PREV = 'NEXT_STATE_PREV_STATE';
  * @name pc.ANIM_GREATER_THAN
  * @description Used to set an anim state graph transition condition predicate as '>'.
  */
-export var ANIM_LESS_THAN = 'LESS_THAN';
 export var ANIM_GREATER_THAN = 'GREATER_THAN';
 /**
  * @constant

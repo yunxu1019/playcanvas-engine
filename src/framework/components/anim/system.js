@@ -12,7 +12,6 @@ var _schema = [
 ];
 
 /**
- * @private
  * @class
  * @name pc.AnimComponentSystem
  * @augments pc.ComponentSystem
