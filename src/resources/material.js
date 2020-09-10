@@ -59,7 +59,7 @@ Object.assign(MaterialHandler.prototype, {
         if (data.graphData) {
             subclass = 'Node';
 
-            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser(this._device);
+            if (!this._parsers[subclass]) this._parsers[subclass] = new JsonNodeMaterialParser();
             if (!this._binders[subclass]) this._binders[subclass] = new NodeMaterialBinder(this._assets, this._device, this._parsers[subclass]);
         } else {
             if (!this._parsers[subclass]) this._parsers[subclass] = new JsonStandardMaterialParser();

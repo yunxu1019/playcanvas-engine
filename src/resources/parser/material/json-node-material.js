@@ -4,13 +4,9 @@ import { NodeMaterial } from '../../../scene/materials/node-material.js';
  * @class
  * @name pc.JsonNodeMaterialParser
  * @description Convert incoming JSON data into a {@link pc.NodeMaterial}.
- * @param {pc.GraphicsDevice} device - The graphics device of the application - required for creating placeholder
  */
-function JsonNodeMaterialParser(device) {
-    this._device = device;
+function JsonNodeMaterialParser() {
     this._validator = null;
-
-    this._placeholderNodeMat = this._genPlaceholderNodeMat();
 }
 
 JsonNodeMaterialParser.prototype.parse = function (input) {
@@ -149,8 +145,6 @@ JsonNodeMaterialParser.prototype.initialize = function (material, data) {
     if (materialReady) {
         material.dirtyShader = true;
         material.update();
-    } else {
-        material.setPlaceHolderShader(this._placeholderNodeMat);
     }
 };
 
@@ -165,16 +159,6 @@ JsonNodeMaterialParser.prototype.migrate = function (data) {
 JsonNodeMaterialParser.prototype._validate = function (data) {
     // no validation needed (yet)
     return data;
-};
-
-JsonNodeMaterialParser.prototype._genPlaceholderNodeMat = function () {
-    var material = new NodeMaterial('void placeHolder(out vec3 vertOff, out vec4 fragOut){ vertOff=vec3(0); fragOut=vec4(0,0,1,1);}');
-
-    // initialize shader and update uniforms
-    material.initShader(this._device);
-    material.updateUniforms();
-
-    return material;
 };
 
 export { JsonNodeMaterialParser };

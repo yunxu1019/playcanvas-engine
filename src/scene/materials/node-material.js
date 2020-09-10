@@ -13,9 +13,13 @@ import { Vec2 } from '../../math/vec2.js';
 import { Vec3 } from '../../math/vec3.js';
 import { Vec4 } from '../../math/vec4.js';
 
+//global placeholder material
+var _placeHolderNodeMat = null;
+
 /**
  * @class
- * @name NodeMaterial
+ * @name pc.NodeMaterial
+ * @augments pc.Material
  * @classdesc A Node material is for rendering geometry with material properties set by a material node graph
  * @param {string} funcGlsl - shader function used by this material
  * @param {string} declGlsl - shader declarations used by the shader function
@@ -51,10 +55,10 @@ NodeMaterial.prototype.constructor = NodeMaterial;
 Object.assign(NodeMaterial.prototype, {
     /**
      * @function
-     * @name NodeMaterial#clone
+     * @name pc.NodeMaterial#clone
      * @description Duplicates a Node material. All properties are duplicated except textures
      * where only the references are copied.
-     * @returns {NodeMaterial} A cloned Node material.
+     * @returns {pc.NodeMaterial} A cloned Node material.
      */
     clone: function () {
         var clone = new NodeMaterial();
@@ -123,12 +127,22 @@ Object.assign(NodeMaterial.prototype, {
         if (this.shaderVariants[pass]) {
             this.shader = this.shaderVariants[pass];
         } else {
+            if (!this._placeHolderShader)
+            {
+                this._genPlaceholderNodeMat(device);
+            }
             this.shader = this._placeHolderShader;
         }
     },
 
-    setPlaceHolderShader: function (placeHolderMat) {
-        this._placeHolderShader = placeHolderMat.shaderVariants[SHADER_FORWARD];
+    _genPlaceholderNodeMat: function (device) {
+        if (!_placeHolderNodeMat)
+        {
+            _placeHolderNodeMat = new NodeMaterial('void placeHolder(out vec3 vertOff, out vec4 fragOut){ vertOff=vec3(0); fragOut=vec4(0,0,1,1);}');
+            _placeHolderNodeMat.initShader(device);
+            _placeHolderNodeMat.updateUniforms();
+        }
+        this._placeHolderShader = _placeHolderNodeMat.shaderVariants[SHADER_FORWARD];
     },
 
     hasValidGraphData: function (graphRootTime) {
@@ -136,26 +150,26 @@ Object.assign(NodeMaterial.prototype, {
         if (this.graphData.ioPorts && this.graphData.ioPorts.length > 0 && (this.graphData.customFuncGlsl || ( this.graphData.subGraphs && this.graphData.subGraphs.length > 0 && this.graphData.connections))) {
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 if (this.graphData.ioPorts[i] && this.graphData.ioPorts[i].name && this.graphData.ioPorts[i].type) {
-                    if (this.graphData.ioPorts[i].type === 'sampler2D' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                    if (this.graphData.ioPorts[i].type === 'sampler2D' && !this.graphData.ioPorts[i].name.startsWith('OUT_') && !this.graphData.customFuncGlsl) {
                         if (!(this.graphData.ioPorts[i].valueTex && this.graphData.ioPorts[i].valueTex instanceof Texture)) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'float' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                    } else if (this.graphData.ioPorts[i].type === 'float' && !this.graphData.ioPorts[i].name.startsWith('OUT_') && !this.graphData.customFuncGlsl) {
                         if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number')) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec2' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec2' && !this.graphData.ioPorts[i].name.startsWith('OUT_') && !this.graphData.customFuncGlsl) {
                         if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
                               this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec3' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec3' && !this.graphData.ioPorts[i].name.startsWith('OUT_') && !this.graphData.customFuncGlsl) {
                         if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
                               this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
                               this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' )) {
                             return false;
                         }
-                    } else if (this.graphData.ioPorts[i].type === 'vec4' && !this.graphData.ioPorts[i].name.startsWith('OUT_') ) {
+                    } else if (this.graphData.ioPorts[i].type === 'vec4' && !this.graphData.ioPorts[i].name.startsWith('OUT_') && !this.graphData.customFuncGlsl) {
                         if (!(this.graphData.ioPorts[i].valueX != undefined && typeof(this.graphData.ioPorts[i].valueX) === 'number' &&
                               this.graphData.ioPorts[i].valueY != undefined && typeof(this.graphData.ioPorts[i].valueY) === 'number' &&
                               this.graphData.ioPorts[i].valueZ != undefined && typeof(this.graphData.ioPorts[i].valueZ) === 'number' &&
@@ -234,7 +248,11 @@ Object.assign(NodeMaterial.prototype, {
                 maxVertexLights: (this.maxVertexLights) ? this.maxVertexLights : 8
             };
 
-            // var depGraphTextureList=[];
+            if (this._previewPort)
+            {
+                options.shaderGraph = this.graphData.subGraphs[0];
+                options.previewPort = this._previewPort;
+            }
 
             var shaderDefinition = programlib.node.createShaderDefinition(device, options);
             this.shaderVariants[passes[i]] = new Shader(device, shaderDefinition);
@@ -243,6 +261,7 @@ Object.assign(NodeMaterial.prototype, {
 
     _addioPort: function (type, name, value) {
         var ioPort;
+        var doPush=true;
         if (value instanceof Texture) {
             ioPort = { type: type, name: name, valueTex: value };
         } else if (value instanceof Vec4) {
@@ -254,12 +273,25 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             ioPort = { type: type, name: name, valueX: value };
         } else {
-            // this is a needed when generating graph vars without default values (outputs)
-            // TODO: check if valid default values should be set?
-            ioPort = { type: type, name: name };
+            /*doPush=false;
+            if (type === 'sampler2D') {
+                ioPort = this._addioPort(type, name, 0);
+            }else if (type === 'float') {
+                ioPort = this._addioPort(type, name, 0);
+            } else if (type === 'vec2') {
+                ioPort = this._addioPort(type, name, Vec2(0, 0));
+            } else if (type === 'vec3') {
+                ioPort = this._addioPort(type, name, Vec3(0, 0, 0));
+            } else if (type === 'vec4') {
+                ioPort = this._addioPort(type, name, Vec4(0, 0, 0, 0));
+            }
+            else*/
+            {
+                ioPort = { type: type, name: name };
+            }
         }
 
-        this.graphData.ioPorts.push(ioPort);
+        if (doPush) this.graphData.ioPorts.push(ioPort);
 
         return ioPort;
     },
@@ -391,14 +423,13 @@ Object.assign(NodeMaterial.prototype, {
         return callString;
     },
 
-    // this is currently not used - but will be used by the shadergraph script interface
-    // TODO: re-enable and optimize using transient name map
-    // _getIoPortByName: function (name) {
+    // TODO: optimize using transient name map?
+    getIoPortByName: function (name) {
         // convienient but not fast - TODO: optimize?
-        // return this.graphData.ioPorts.filter(function (ioPort) {
-        //    return ioPort.name === name;
-        // })[0];
-    // },
+        return this.graphData.ioPorts.filter(function (ioPort) {
+            return ioPort.name === name;
+        })[0];
+    },
 
     _generateSubGraphFuncs: function (depGraphFuncs, depioPortList) {
         var i;
@@ -430,10 +461,11 @@ Object.assign(NodeMaterial.prototype, {
         }
     },
 
-    generateRootDeclGlsl: function () {
+    generateRootDeclGlsl: function (previewPort) {
         var i;
         var ioPort;
         var generatedGlsl = '';
+
         // run through inputs (and const sampler2Ds) to declare uniforms - (default) values are set elsewhere
         for (i = 0; i < this.graphData.ioPorts.length; i++) {
             var matId = '_' + this.id;
@@ -459,7 +491,7 @@ Object.assign(NodeMaterial.prototype, {
         if (!this.graphData.customFuncGlsl) {
             depName += '_' + this.id;
         }
-        depGraphFuncs[depName] = this._generateFuncGlsl(); // this should prevent infinite recursion?
+        depGraphFuncs[depName] = this._generateFuncGlsl(previewPort); // this should prevent infinite recursion?
 
         this._generateSubGraphFuncs(depGraphFuncs, depioPortList);
 
@@ -522,7 +554,7 @@ Object.assign(NodeMaterial.prototype, {
         // NB the pass (or layer) will decide which output is used and how
     },
 
-    _generateFuncGlsl: function () {
+    _generateFuncGlsl: function (previewPort) {
         var i;
         var ioPort;
         var generatedGlsl;
@@ -578,9 +610,25 @@ Object.assign(NodeMaterial.prototype, {
             var srcConnectedMap = [];
             var dstConnectedMap = [];
 
-            // create temp vars and graph traversal data
-            for (i = 0; i < this.graphData.connections.length; i++) {
-                var con = this.graphData.connections[i];
+            // create temp vars and graph traversal data (iterate one more time for preview out)
+            for (i = 0; i < this.graphData.connections.length + 1; i++) {
+                var con;
+                if (i === this.graphData.connections.length)
+                {
+                    if (previewPort)
+                    {
+                        con = { srcIndex: previewPort.index, srcPortName: previewPort.name, dstIndex: -1, dstPortName: 'OUT_preview' };
+                    }
+                    else
+                    {
+                        // no preview - skip
+                        continue;
+                    }
+                }
+                else
+                {
+                    con = this.graphData.connections[i];
+                }
                 // if there is a src sub graph assign tmp var to all of it's outputs
                 if (con.srcIndex >= 0) {
                     var srcSubGraph = this.graphData.subGraphs[con.srcIndex];
@@ -677,11 +725,36 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
 
+            var previewFlag = false;
+
             // output assignment
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
                 if (ioPort.name.startsWith('OUT_') && !ioPort.name.startsWith('OUT_ret')) {
-                    generatedGlsl += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
+                    if (graphOutputVarTmpVarMap[ioPort.name])
+                    {
+                        generatedGlsl += ioPort.name + ' = ' + graphOutputVarTmpVarMap[ioPort.name] + ';\n';
+                    }
+                    else
+                    {
+                        generatedGlsl += ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';   
+                    }
+                    if (previewPort && ioPort.name === 'OUT_fragOut')
+                    {
+                        previewFlag = true;
+                    }
+                }
+            }
+
+            if (previewPort)
+            {
+                if (previewFlag)
+                {
+                    generatedGlsl += 'OUT_fragOut = ' + graphOutputVarTmpVarMap.OUT_preview + ';\n';
+                }
+                else
+                {
+                    generatedGlsl += 'vec4 OUT_fragOut = ' + graphOutputVarTmpVarMap.OUT_preview + ';\n';
                 }
             }
 
@@ -693,4 +766,111 @@ Object.assign(NodeMaterial.prototype, {
 
 });
 
-export { NodeMaterial };
+var shadergraph = {};
+
+shadergraph.graphCounter = 0;
+
+shadergraph.nodeRegistry = {};
+
+shadergraph._getNode = function (name, funcString, declString) {
+    if (!this.nodeRegistry[name]) {
+        this.nodeRegistry[name] = new NodeMaterial(funcString, declString);
+    }
+
+    return this.nodeRegistry[name];
+};
+
+shadergraph.start = function () {
+    // check current graph is null?
+    shadergraph.graph = this._getNode('graphRoot_' + shadergraph.graphCounter);
+    shadergraph.graph.name = 'graphRoot_' + shadergraph.graphCounter;
+};
+
+shadergraph.end = function () {
+    var ret = shadergraph.graph;
+    shadergraph.graph = null;
+    shadergraph.graphCounter++;
+    return ret;
+};
+
+shadergraph.textureSample2D = function (name, texture, uv) {
+
+    var texSampNode = this.graph.addSubGraph(this._getNode('texSample', 'vec4 texSample(in sampler2D tex, in vec2 uv, out vec3 color, out float alpha) {\n vec4 samp=texture2D(tex, uv);\n color=samp.rgb;\n alpha=samp.a;\n return samp;\n}'));
+
+    // assumes name is unique TODO: verify?
+    var ioPort = this.graph.addInput('sampler2D', name, texture);
+    this.graph.connect(-1, ioPort.name, texSampNode, 'IN_tex');
+    this.graph.connect(uv, 'OUT_ret', texSampNode, 'IN_uv');
+
+    return texSampNode;
+};
+
+shadergraph.customNode = function (name, f, d) {
+    var nodeIndex = this.graph.addSubGraph(this._getNode(name, f, d));
+    return nodeIndex;
+};
+
+Object.defineProperty(shadergraph, 'uv0', {
+    get: function () {
+        var nodeIndex = this.graph.addSubGraph(this._getNode('uv0', 'vec2 uv0() { return vUv0; }'));
+        return nodeIndex;
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldPosPS', {
+    get: function () {
+        var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosPS', 'vec3 wpPS() { return vPosition; }'));
+        return nodeIndex;
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldNormPS', {
+    get: function () {
+        var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormPS', 'vec3 wnPS() { return vNormal; }'));
+        return nodeIndex;
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldPosVS', {
+    get: function () {
+        var nodeIndex = this.graph.addSubGraph(this._getNode('worldPosVS', 'vec3 wpVS() { return getWorldPositionNM(); }'));
+        return nodeIndex;
+    }
+});
+
+Object.defineProperty(shadergraph, 'worldNormVS', {
+    get: function () {
+        var nodeIndex = this.graph.addSubGraph(this._getNode('worldNormVS', 'vec3 wnVS() { return getWorldNormalNM(); }'));
+        return nodeIndex;
+    }
+});
+
+shadergraph.param = function (type, name, value) {
+    // assumes name is unique TODO: verify this
+    var ioPort = this.graph.addInput(type, name, value);
+    return ioPort;
+};
+
+shadergraph.connectFragOut = function (nodeIndex, name) {
+    // assumes this is only called once per graph TODO: verify this
+    var ioPort = this.graph.addOutput('vec4', 'fragOut', new Vec4(0, 0, 0, 0));
+    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, ioPort.name);
+};
+
+shadergraph.connectVertexOffset = function (nodeIndex, name) {
+    // assumes this is only called once per graph TODO: verify this
+    var ioPort = this.graph.addOutput('vec3', 'vertOff', new Vec3(0, 0, 0));
+    this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', -1, ioPort.name);
+};
+
+shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_param, name) {
+    if (typeof(nodeIndex_or_param) === 'number') {
+        var nodeIndex = nodeIndex_or_param;
+        this.graph.connect(nodeIndex, (name) ? 'OUT_' + name : 'OUT_ret', destNodeIndex, 'IN_' + destName);
+    } else {
+        var ioPort = nodeIndex_or_param;
+        this.graph.connect(-1, ioPort.name, destNodeIndex, 'IN_' + destName);
+    }
+};
+
+export { NodeMaterial, shadergraph };
