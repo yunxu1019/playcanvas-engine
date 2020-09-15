@@ -331,12 +331,12 @@ Object.assign(NodeMaterial.prototype, {
             if (inOrOutAndTypeAndName[0] === "out") {
                 this.addOutput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
                 // this.defineOuputGetter(this.outputName[this.outputName.length - 1], this.outputName.length - 1);
-            }
-            if (inOrOutAndTypeAndName[0] === "in") {
+            } else if (inOrOutAndTypeAndName[0] === "in") {
                 this.addInput(inOrOutAndTypeAndName[1], inOrOutAndTypeAndName[2]);
                 // this.defineInputSetter(this.inputName[this.inputName.length - 1], this.inputName.length - 1);
             } else {
                 // unsupported parameter !!! TODO add support for more parameter types?
+                console.warn('unsupported parameter in shader function!!!');
             }
         }
     },
@@ -347,10 +347,21 @@ Object.assign(NodeMaterial.prototype, {
         return ret;
     },
 
-    connect: function (srcIndex, srcPortName, dstIndex, dstPortName) {
-        var connection = { srcIndex: srcIndex, srcPortName: srcPortName, dstIndex: dstIndex, dstPortName: dstPortName };
-
-        this.graphData.connections.push(connection);
+    connect: function (srcIndex, srcPortName, dstIndex, dstPortName, conIndex) {
+        if (conIndex != undefined)
+        {
+            this.graphData.connections[conIndex].srcIndex=srcIndex;
+            this.graphData.connections[conIndex].srcPortName=srcPortName;
+            this.graphData.connections[conIndex].dstIndex=dstIndex;
+            this.graphData.connections[conIndex].dstPortName=dstPortName;
+        }
+        else
+        {
+            var connection = { srcIndex: srcIndex, srcPortName: srcPortName, dstIndex: dstIndex, dstPortName: dstPortName };
+            conIndex = this.graphData.connections.length;
+            this.graphData.connections.push(connection);
+        }
+        return conIndex;
     },
 
     _getIoPortValueString: function (ioPort) {
@@ -678,7 +689,7 @@ Object.assign(NodeMaterial.prototype, {
             // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
             var whileLoopCount = 0;
 
-            while (subGraphList.length < this.graphData.subGraphs.length || whileLoopCount < this.graphData.connections.length) {
+            while (subGraphList.length < this.graphData.subGraphs.length && whileLoopCount < this.graphData.connections.length) {
                 whileLoopCount++;
 
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
@@ -767,7 +778,7 @@ Object.assign(NodeMaterial.prototype, {
 });
 
 var shadergraph = {};
-
+/*
 shadergraph.graphCounter = 0;
 
 shadergraph.nodeRegistry = {};
@@ -872,5 +883,5 @@ shadergraph.connectCustom = function (destNodeIndex, destName, nodeIndex_or_para
         this.graph.connect(-1, ioPort.name, destNodeIndex, 'IN_' + destName);
     }
 };
-
+*/
 export { NodeMaterial, shadergraph };

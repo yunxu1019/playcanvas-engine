@@ -801,7 +801,7 @@ Object.assign(ElementInput.prototype, {
         if (!a.screen && b.screen)
             return 1;
         if (!a.screen && !b.screen)
-            return 0;
+            return b.drawOrder - a.drawOrder; // this allows drawOrder to work for 3D elements
 
         if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace)
             return -1;
