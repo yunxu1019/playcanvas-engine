@@ -291,9 +291,11 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 
-        if (doPush) this.graphData.ioPorts.push(ioPort);
+        var ret = this.graphData.ioPorts.length;
 
-        return ioPort;
+        this.graphData.ioPorts.push(ioPort);
+
+        return ret;
     },
 
     addInput: function (type, name, value) {
