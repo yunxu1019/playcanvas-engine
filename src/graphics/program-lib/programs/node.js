@@ -152,9 +152,13 @@ var node = {
         // FRAGMENT SHADER BODY
         code += begin();
 
-        if (options.shaderGraph && options.shaderGraph.getIoPortByName('OUT_fragOut') ) {
+        if (options.shaderGraph && (options.shaderGraph.getIoPortByName('OUT_fragOut') || options.previewPort) ) {
             code += rootCallGLSL;
             code += 'gl_FragColor=OUT_fragOut;\n';
+        }
+        else
+        {
+            code += 'gl_FragColor=vec4(fract(gl_FragCoord.x/16.0),fract(gl_FragCoord.y/16.0),0.5,1.0);\n';
         }
 
         if (options.alphatest) {
@@ -176,7 +180,7 @@ var node = {
         // generate graph
         // TODO: support generation of shader variants based on options
         var rootDeclGLSL = options.shaderGraph.generateRootDeclGlsl(options.previewPort);
-        var rootCallGLSL = options.shaderGraph.generateRootCallGlsl();
+        var rootCallGLSL = options.shaderGraph.generateRootCallGlsl(options.previewPort);
 
         // GENERATE ATTRIBUTES
         var attributes = {

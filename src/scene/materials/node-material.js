@@ -79,9 +79,12 @@ Object.assign(NodeMaterial.prototype, {
         return clone;
     },
 
-    updateUniforms: function () {
+    updateUniforms: function (pre_this) {
         this.clearParameters();
-
+        if (this._previewPort)
+        {
+            this.graphData.subGraphs[0].updateUniforms(this);
+        }
         for (var n = 0; n < this.graphData.ioPorts.length; n++) {
             var ioPort = this.graphData.ioPorts[n];
 
@@ -91,18 +94,23 @@ Object.assign(NodeMaterial.prototype, {
                 switch (ioPort.type) {
                     case 'sampler2D':
                         this.setParameter(ioPort.name + matId, ioPort.valueTex);
+                        if (pre_this) pre_this.setParameter(ioPort.name + matId, ioPort.valueTex);
                         break;
                     case 'float':
                         this.setParameter(ioPort.name + matId, ioPort.valueX);
+                        if (pre_this) pre_this.setParameter(ioPort.name + matId, ioPort.valueX);
                         break;
                     case 'vec2':
                         this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY]);
+                        if (pre_this) pre_this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY]);
                         break;
                     case 'vec3':
                         this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ]);
+                        if (pre_this) pre_this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ]);
                         break;
                     case 'vec4':
                         this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW]);
+                        if (pre_this) pre_this.setParameter(ioPort.name + matId, [ioPort.valueX, ioPort.valueY, ioPort.valueZ, ioPort.valueW]);
                         break;
                     case 'samplerCube':
                     default:
@@ -119,7 +127,7 @@ Object.assign(NodeMaterial.prototype, {
     },
 
     updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-        if (this.hasValidGraphData()) {
+        if (this.hasValidGraphData() || (this._previewPort)) {
             this.initShader(device);
             this.dirtyShader = false;
         }
@@ -138,7 +146,7 @@ Object.assign(NodeMaterial.prototype, {
     _genPlaceholderNodeMat: function (device) {
         if (!_placeHolderNodeMat)
         {
-            _placeHolderNodeMat = new NodeMaterial('void placeHolder(out vec3 vertOff, out vec4 fragOut){ vertOff=vec3(0); fragOut=vec4(0,0,1,1);}');
+            _placeHolderNodeMat = new NodeMaterial('void placeHolder(out vec3 vertOff, out vec4 fragOut){ vertOff=vec3(0); fragOut=vec4(0,0,1,1);/*vec4(fract(gl_FragCoord.x/16.0),fract(gl_FragCoord.y/16.0),0.5,1.0);*/}');
             _placeHolderNodeMat.initShader(device);
             _placeHolderNodeMat.updateUniforms();
         }
@@ -259,9 +267,9 @@ Object.assign(NodeMaterial.prototype, {
         }
     },
 
-    _addioPort: function (type, name, value) {
+    _addioPort: function (type, name, value, index) {
         var ioPort;
-        var doPush=true;
+        // var doPush=true;
         if (value instanceof Texture) {
             ioPort = { type: type, name: name, valueTex: value };
         } else if (value instanceof Vec4) {
@@ -291,11 +299,17 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 
-        var ret = this.graphData.ioPorts.length;
+        if (index != undefined)
+        {
+            this.graphData.ioPorts[index] = ioPort;
+        }
+        else
+        {
+            index = this.graphData.ioPorts.length;
+            this.graphData.ioPorts.push(ioPort);
+        }
 
-        this.graphData.ioPorts.push(ioPort);
-
-        return ret;
+        return index;
     },
 
     addInput: function (type, name, value) {
@@ -377,6 +391,10 @@ Object.assign(NodeMaterial.prototype, {
             ret = 'vec3(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ')';
         } else if (ioPort.type === 'vec4') {
             ret = 'vec4(' + ioPort.valueX + ', ' + ioPort.valueY + ', ' + ioPort.valueZ + ', ' + ioPort.valueW + ')';
+        }
+        else
+        {
+            ret = ioPort.valueString;
         }
 
         return ret;
@@ -542,7 +560,7 @@ Object.assign(NodeMaterial.prototype, {
         return generatedGlsl;
     },
 
-    generateRootCallGlsl: function () {
+    generateRootCallGlsl: function (previewPort) {
         var generatedGlsl = '';
 
         // generate input and output names for function call and run through outputs to declare variables
@@ -561,7 +579,18 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 
-        generatedGlsl += this._generateSubGraphCall(inNames, outNames);
+        if (previewPort && !(this.getIoPortByName('OUT_fragOut')))
+        {
+            generatedGlsl += 'vec4 OUT_fragOut;\n';
+            generatedGlsl += this._generateSubGraphCall(inNames, outNames);
+            generatedGlsl = generatedGlsl.slice(0, -4);
+            if (Object.keys(inNames).length > 0 || Object.keys(outNames).length > 0) generatedGlsl += ', ';
+            generatedGlsl += 'OUT_fragOut );\n';
+        }
+        else
+        {
+            generatedGlsl += this._generateSubGraphCall(inNames, outNames);
+        }
 
         return generatedGlsl;
         // NB the pass (or layer) will decide which output is used and how
@@ -577,6 +606,7 @@ Object.assign(NodeMaterial.prototype, {
             generatedGlsl = this.graphData.customFuncGlsl.trim();
         } else if (this.graphData.subGraphs) {
             // graph
+
             // function head
             var retUsed = false;
 
@@ -610,6 +640,11 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
 
+            if (previewPort && !(this.getIoPortByName('OUT_fragOut')))
+            {
+                generatedGlsl += 'out vec4 OUT_fragOut, ';
+            }
+
             if (generatedGlsl.endsWith(', ')) generatedGlsl = generatedGlsl.slice(0, -2);
 
             generatedGlsl += ' ) {\n';
@@ -624,7 +659,7 @@ Object.assign(NodeMaterial.prototype, {
             var dstConnectedMap = [];
 
             // create temp vars and graph traversal data (iterate one more time for preview out)
-            for (i = 0; i < this.graphData.connections.length + 1; i++) {
+            for (i = 0; i < this.graphData.connections.length + ((previewPort) ? 1 : 0); i++) {
                 var con;
                 if (i === this.graphData.connections.length)
                 {
@@ -679,7 +714,8 @@ Object.assign(NodeMaterial.prototype, {
                         // root graph output var
                         graphOutputVarTmpVarMap[con.dstPortName] = srcTmpVarMap[con.srcIndex][con.srcPortName];
                     } else {
-                        // invalid connection?!
+                        // this is a direct conection between an input port and an output io port - this happens on all input port editor previews
+                        graphOutputVarTmpVarMap[con.dstPortName] = con.srcPortName;
                     }
                 }
             }
@@ -691,7 +727,7 @@ Object.assign(NodeMaterial.prototype, {
             // it should not be possible for the the number of iterations to exceeds the number of connections - unless there is a cyclic dependency
             var whileLoopCount = 0;
 
-            while (subGraphList.length < this.graphData.subGraphs.length && whileLoopCount < this.graphData.connections.length) {
+            while (subGraphList.length < this.graphData.subGraphs.length && whileLoopCount <= (this.graphData.connections.length + ((previewPort) ? 1 : 0)) ) {
                 whileLoopCount++;
 
                 for (i = 0; i < this.graphData.subGraphs.length; i++) {
@@ -738,8 +774,6 @@ Object.assign(NodeMaterial.prototype, {
                 }
             }
 
-            var previewFlag = false;
-
             // output assignment
             for (i = 0; i < this.graphData.ioPorts.length; i++) {
                 ioPort = this.graphData.ioPorts[i];
@@ -750,25 +784,58 @@ Object.assign(NodeMaterial.prototype, {
                     }
                     else
                     {
-                        generatedGlsl += ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';   
-                    }
-                    if (previewPort && ioPort.name === 'OUT_fragOut')
-                    {
-                        previewFlag = true;
+                        generatedGlsl += ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
                     }
                 }
             }
 
             if (previewPort)
             {
-                if (previewFlag)
+                var previewPort_valType = 'unsupported';
+                var port = null;
+
+                if (previewPort.index >= 0)
                 {
-                    generatedGlsl += 'OUT_fragOut = ' + graphOutputVarTmpVarMap.OUT_preview + ';\n';
+                    if (this.graphData.subGraphs && this.graphData.subGraphs[previewPort.index])
+                    {
+                        port = this.graphData.subGraphs[previewPort.index].getIoPortByName(previewPort.name);
+                        if (port)
+                        {
+                            previewPort_valType = port.type;
+                        }
+                    }
                 }
                 else
                 {
-                    generatedGlsl += 'vec4 OUT_fragOut = ' + graphOutputVarTmpVarMap.OUT_preview + ';\n';
+                    port = this.getIoPortByName(previewPort.name);
+                    if (port)
+                    {
+                        previewPort_valType = port.type;
+                    }
                 }
+
+                switch (previewPort_valType) {
+                    case 'vec4':
+                        generatedGlsl += 'OUT_fragOut = ' + graphOutputVarTmpVarMap.OUT_preview + ';\n';
+                        break;
+                    case 'vec3':
+                        generatedGlsl += 'OUT_fragOut = vec4(' + graphOutputVarTmpVarMap.OUT_preview + ',1);\n';
+                        break;
+                    case 'vec2':
+                        generatedGlsl += 'OUT_fragOut = vec4(' + graphOutputVarTmpVarMap.OUT_preview + ',0,1);\n';
+                        break;
+                    case 'float':
+                        generatedGlsl += 'OUT_fragOut = vec4(vec3(' + graphOutputVarTmpVarMap.OUT_preview + '),1);\n';
+                        break;
+                    case 'sampler2D':
+                        generatedGlsl += 'OUT_fragOut = texture2D(' + graphOutputVarTmpVarMap.OUT_preview + ', vUv0);\n';
+                        break;
+                    default:
+                        // unsupported - TODO make nice pattern to indicate this??
+                        break;
+                }
+
+                generatedGlsl += '#define PreviewPort_sgIndex:'+previewPort.index+'_'+previewPort_valType+'_'+previewPort.name+'\n';
             }
 
             generatedGlsl += '}\n';
