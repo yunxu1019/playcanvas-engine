@@ -79,12 +79,16 @@ Object.assign(NodeMaterial.prototype, {
         return clone;
     },
 
-    updateUniforms: function (pre_this) {
+    updateUniforms: function (pre_this, pre_time) {
         this.clearParameters();
+        
         if (this._previewPort)
         {
-            this.graphData.subGraphs[0].updateUniforms(this);
+            this.setParameter("uTime", this._previewPort.time);
+            this.graphData.subGraphs[0].updateUniforms(this, this._previewPort.time);
         }
+        if (pre_this) pre_this.setParameter("uTime", pre_time);
+
         for (var n = 0; n < this.graphData.ioPorts.length; n++) {
             var ioPort = this.graphData.ioPorts[n];
 
@@ -281,22 +285,7 @@ Object.assign(NodeMaterial.prototype, {
         } else if (typeof(value) === 'number') {
             ioPort = { type: type, name: name, valueX: value };
         } else {
-            /*doPush=false;
-            if (type === 'sampler2D') {
-                ioPort = this._addioPort(type, name, 0);
-            }else if (type === 'float') {
-                ioPort = this._addioPort(type, name, 0);
-            } else if (type === 'vec2') {
-                ioPort = this._addioPort(type, name, Vec2(0, 0));
-            } else if (type === 'vec3') {
-                ioPort = this._addioPort(type, name, Vec3(0, 0, 0));
-            } else if (type === 'vec4') {
-                ioPort = this._addioPort(type, name, Vec4(0, 0, 0, 0));
-            }
-            else*/
-            {
-                ioPort = { type: type, name: name };
-            }
+            ioPort = { type: type, name: name, valueString: value };
         }
 
         if (index != undefined)
@@ -511,6 +500,11 @@ Object.assign(NodeMaterial.prototype, {
             if (ioPort.name.startsWith('CONST_') && (ioPort.type != 'sampler2D' )) {
                 generatedGlsl += ioPort.type + ' ' + ioPort.name + ' = ' + this._getIoPortValueString(ioPort) + ';\n';
             }
+        }
+
+        if (previewPort)
+        {
+            generatedGlsl += 'uniform float uTime;\n';
         }
 
         // get all sub graph function definitions (including functions in sub graphs' sub graphs ...)
