@@ -63,18 +63,36 @@ var node = {
 
         if (options.shaderGraph && options.shaderGraph.getIoPortByName('OUT_vertOff') ) {
             code += rootCallGLSL;
-            code += "   vPosition = getWorldPositionNM()+OUT_vertOff;\n";
-            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
+            if (options.pass === 'PP')
+            {
+                code += "    gl_Position = vec4(vertex_position.xy, 0.0, 1.0);\n"; // TODO: add in offset?
+                code += "    vUv0 = (vertex_position.xy + 1.0) * 0.5;\n";
+            }
+            else
+            {
+                code += "   vPosition = getWorldPositionNM()+OUT_vertOff;\n";
+                code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
+            }
         } else {
-            code += "   vPosition = getWorldPositionNM();\n";
-            code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
+            if (options.pass === 'PP')
+            {
+                code += "    gl_Position = vec4(vertex_position.xy, 0.0, 1.0);\n";
+                code += "    vUv0 = (vertex_position.xy + 1.0) * 0.5;\n";
+            }
+            else
+            {
+                code += "   vPosition = getWorldPositionNM();\n";
+                code += "   gl_Position = matrix_viewProjection*vec4(vPosition,1);\n";
+            }
         }
 
         // TODO: support passes SHADER_DEPTH SHADER_FORWARD SHADER_FORWARDHDR SHADER_PICK
-        code += '    vNormal = normalize(getWorldNormalNM());\n';
-        code += '    vColor = vertex_color;\n';
-        code += '    vUv0 = vertex_texCoord0;\n';
-
+        if (options.pass != 'PP')
+        {
+            code += '    vNormal = normalize(getWorldNormalNM());\n';
+            code += '    vColor = vertex_color;\n';
+            code += '    vUv0 = vertex_texCoord0;\n';
+        }
         code += end();
 
         var vshader = code;

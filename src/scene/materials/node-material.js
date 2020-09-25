@@ -81,7 +81,7 @@ Object.assign(NodeMaterial.prototype, {
 
     updateUniforms: function (pre_this, pre_time) {
         this.clearParameters();
-        
+
         if (this._previewPort)
         {
             this.setParameter("uTime", this._previewPort.time);
@@ -502,7 +502,7 @@ Object.assign(NodeMaterial.prototype, {
             }
         }
 
-        if (previewPort)
+        if (previewPort || this._ppDebug) // temp debug thing
         {
             generatedGlsl += 'uniform float uTime;\n';
         }

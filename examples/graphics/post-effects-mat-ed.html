@@ -36,9 +36,9 @@
 
     <!-- Include some post effects -->
     <script src="../assets/scripts/posteffects/posteffect-bloom.js"></script>
-    <script src="../assets/scripts/posteffects/posteffect-sepia.js"></script>
-    <script src="../assets/scripts/posteffects/posteffect-vignette.js"></script>
-    <script src="../assets/scripts/posteffects/posteffect-bokeh.js"></script>
+    <!script src="../assets/scripts/posteffects/posteffect-sepia.js"><!/script>
+    <!script src="../assets/scripts/posteffects/posteffect-vignette.js"><!/script>
+    <script src="../assets/scripts/posteffects/posteffect-graph.js"></script>
     <!-- The script -->
     <script>
         // Start the update loop
@@ -50,6 +50,129 @@
         window.addEventListener("resize", function () {
             app.resizeCanvas(canvas.width, canvas.height);
         });
+        
+        var nodeMaterials={};
+        var textures={};
+        var graphPP;
+
+        function getTextureValue(value)
+        {
+            var textureName = value.base64_name;
+
+            textures[textureName] = new pc.Texture( this.app.graphicsDevice, {
+                // minFilter: pc.FILTER_LINEAR,
+                // magFilter: pc.FILTER_LINEAR,
+                // addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                // addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                // mipmaps: false
+            } );
+
+            const img = document.createElement( 'img' );
+            img.src = value.base64_data;
+            img.crossOrigin = 'anonymous';
+            img.onload = ( e ) => {
+                textures[textureName].setSource( img );
+                // this callback could be a problem?
+            };
+
+            return textures[textureName];
+        }
+
+        function parseGraphDataJSON(graphDataString) {
+            function reviver(key, value) {
+                if (value instanceof Object)
+                {
+                    const ObjKeys = Object.keys(value);
+                    if (ObjKeys.length == 1 && ObjKeys[0] === 'subgName')
+                    {
+                        return nodeMaterials[value.subgName];
+                    }
+                }
+                if (key === 'valueTex')
+                {
+                    return getTextureValue(value);
+                }
+                return value;
+            }
+            return JSON.parse(graphDataString, reviver.bind(this));
+        }
+
+        function setNodeList(nodeListString)
+        {
+            var subGraphNodeList=JSON.parse(nodeListString);
+
+             // first pass - register all unregistered subgraphs
+            Object.keys(subGraphNodeList).forEach((key) => {
+                nodeMaterials[key] = new pc.NodeMaterial();
+            });
+
+            // second pass - update all sub graph definitions in the import list
+            Object.keys(subGraphNodeList).forEach((key) => {
+                var code = subGraphNodeList[key].code
+                if (subGraphNodeList[key].code.startsWith('{"ioPorts":')) 
+                {
+                    nodeMaterials[key].graphData = parseGraphDataJSON(code, nodeMaterials);
+                    nodeMaterials[key].dirtyShader = true;
+                }
+                else
+                {
+                    nodeMaterials[key].graphData.ioPorts = [];
+                    nodeMaterials[key].graphData.customFuncGlsl = code;
+                    nodeMaterials[key].genCustomFuncVars();
+                    nodeMaterials[key].dirtyShader = true;
+                }
+            });
+
+            //hook up shader to Post process
+            if (nodeMaterials['ppGraph'])
+            {
+                nodeMaterials['ppGraph']._ppDebug=1; // temp debug
+
+                graphPP = new pc.GraphEffect(app.graphicsDevice, nodeMaterials['ppGraph']);
+                camera.camera.postEffects.addEffect(graphPP);
+            }
+        }
+
+        const url_string = window.location.href;
+        const url_options = new URL(url_string);
+        const url_nodeList = url_options.searchParams.get("nodeList");
+
+        // set node list if in URL options
+        if (url_nodeList) setNodeList(url_nodeList);
+
+        function dropHandler(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            var files = evt.dataTransfer.files;
+            // Loop through the FileList and read
+            for (var i = 0, f; f = files[i]; i++) {
+        
+                // Only process json files.
+                if (!f.type.match('application/json')) {
+                    continue;
+                }
+        
+                var reader = new FileReader();
+        
+                // Closure to capture the file information.
+                reader.onload = (function(theFile) {
+                return function(e) {
+                    setNodeList(e.target.result);
+                };
+                })(f);
+        
+                reader.readAsText(f);
+            }
+        }
+
+        // configure drag and drop
+        const preventDefault = function (ev) {
+            ev.preventDefault();
+        };
+
+        window.addEventListener('dragenter', preventDefault, false);
+        window.addEventListener('dragover', preventDefault, false);
+        window.addEventListener('drop', this.dropHandler.bind(this), false);
 
         var miniStats = new pcx.MiniStats(app);
 
@@ -139,7 +262,7 @@
         bloom.bloomThreshold = 0.1;
         camera.camera.postEffects.addEffect(bloom);
 
-        var sepia = new pc.SepiaEffect(app.graphicsDevice);
+/*      var sepia = new pc.SepiaEffect(app.graphicsDevice);
         sepia.amount = 0.7;
         camera.camera.postEffects.addEffect(sepia);
 
@@ -147,9 +270,10 @@
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 
-        var bokeh = new pc.BokehEffect(app.graphicsDevice);
-        bokeh.focus = 0.4;
-        camera.camera.postEffects.addEffect(bokeh);
+        // var bokeh = new pc.BokehEffect(app.graphicsDevice);
+        // bokeh.focus = 0.4;
+        // camera.camera.postEffects.addEffect(bokeh);*/
+
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);
         app.root.addChild(light);
@@ -160,6 +284,7 @@
         var radius = 20;
         var height = 5;
         var angle = 0;
+        var time = 0;
 
         var pointRadius = 5;
         var pointHeight = 10;
@@ -168,13 +293,13 @@
         var onKeyDown = function (e) {
             if (e.key === pc.KEY_SPACE) {
                 if (hasEffects) {
-                    camera.camera.postEffects.removeEffect(bokeh);
-                    camera.camera.postEffects.removeEffect(sepia);
-                    camera.camera.postEffects.removeEffect(vignette);
+                    camera.camera.postEffects.removeEffect(graph);
+//                    camera.camera.postEffects.removeEffect(sepia);
+//                    camera.camera.postEffects.removeEffect(vignette);
                 } else {
-                    camera.camera.postEffects.addEffect(sepia);
-                    camera.camera.postEffects.addEffect(vignette);
-                    camera.camera.postEffects.addEffect(bokeh);
+//                    camera.camera.postEffects.addEffect(sepia);
+//                    camera.camera.postEffects.addEffect(vignette);
+                    camera.camera.postEffects.addEffect(graph);
                 }
                 hasEffects = !hasEffects;
             }
@@ -196,6 +321,9 @@
 
                 pointlight.setLocalPosition(pointRadius * Math.sin(-2 * angle * pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2 * angle * pc.math.DEG_TO_RAD));
             }
+
+            time+=dt;
+            if (nodeMaterials['ppGraph']) nodeMaterials['ppGraph'].setParameter('uTime', time);
 
         });
     </script>
