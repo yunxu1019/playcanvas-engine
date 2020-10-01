@@ -148,11 +148,22 @@ var node = {
 
         // FRAGMENT SHADER DECLARATIONS
         code += 'uniform vec3 view_position;\n';
+        if (options.previewPort)
+        {
+            code += '#define PREVIEW_MAT;\n';
+        }
 
         code += 'varying vec3 vPosition;\n';
         code += 'varying vec3 vNormal;\n';
         code += 'varying vec4 vColor;\n';
         code += 'varying vec2 vUv0;\n';
+
+        if (options.pass === 'PP' || options.previewPort)
+        {
+            code += "uniform sampler2D uColorBuffer;\n";
+            //code += "uniform sampler2D uDepthMap;\n";
+            code += chunks.screenDepthPS;
+        }
 
         if (options.fog) {
             code += fogCode(options.fog);

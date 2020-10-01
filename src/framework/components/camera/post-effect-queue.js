@@ -162,19 +162,25 @@ Object.assign(PostEffectQueue.prototype, {
             var order = 0;
             var i;
             var start = layerList.length - 1;
-            for (i = start; i >= 0; i--) {
-                if (layerList[i].id === LAYERID_UI) {
-                    start = i - 1;
+            for (i = start; i >= 0; i--) 
+            {
+                if (this.camera.layers.indexOf(layerList[i].id) != -1)
+                {
+                    if (layerList[i].id === LAYERID_UI)
+                    {
+                        start = i - 1;
 
-                    this._origOverrideClear = layerList[i].overrideClear;
-                    this._origClearColorBuffer = layerList[i].clearColorBuffer;
-                    this._origDepthColorBuffer = layerList[i].clearDepthBuffer;
-                    this._origStencilColorBuffer = layerList[i].clearStencilBuffer;
+                        this._origOverrideClear = layerList[i].overrideClear;
+                        this._origClearColorBuffer = layerList[i].clearColorBuffer;
+                        this._origDepthColorBuffer = layerList[i].clearDepthBuffer;
+                        this._origStencilColorBuffer = layerList[i].clearStencilBuffer;
 
-                    layerList[i].overrideClear = true;
-                    layerList[i].clearColorBuffer = false;
-                    layerList[i].clearDepthBuffer = this.camera.clearDepthBuffer;
-                    layerList[i].clearStencilBuffer = this.camera.clearStencilBuffer;
+                        layerList[i].overrideClear = true;
+                        layerList[i].clearColorBuffer = false;
+                        layerList[i].clearDepthBuffer = this.camera.clearDepthBuffer;
+                        layerList[i].clearStencilBuffer = this.camera.clearStencilBuffer;
+                        
+                    }
                     break;
                 }
             }
