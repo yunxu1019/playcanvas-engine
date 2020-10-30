@@ -114,19 +114,19 @@ export var ANIM_BLEND_1D = '1D';
 /**
  * @constant
  * @type {string}
- * @name pc.2D_DIRECTIONAL
+ * @name pc.ANIM_BLEND_2D_DIRECTIONAL
  */
 export var ANIM_BLEND_2D_DIRECTIONAL = '2D_DIRECTIONAL';
 /**
  * @constant
  * @type {string}
- * @name pc.2D_CARTESIAN
+ * @name pc.ANIM_BLEND_2D_CARTESIAN
  */
 export var ANIM_BLEND_2D_CARTESIAN = '2D_CARTESIAN';
 /**
  * @constant
  * @type {string}
- * @name pc.DIRECT
+ * @name pc.ANIM_BLEND_DIRECT
  */
 export var ANIM_BLEND_DIRECT = 'DIRECT';
 /**
