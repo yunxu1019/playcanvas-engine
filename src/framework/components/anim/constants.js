@@ -105,12 +105,30 @@ export var ANIM_PARAMETER_BOOLEAN = 'BOOLEAN';
  * @description Used to set an anim state graph parameter as type trigger.
  */
 export var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
-
+/**
+ * @constant
+ * @type {string}
+ * @name pc.ANIM_BLEND_1D
+ */
 export var ANIM_BLEND_1D = '1D';
+/**
+ * @constant
+ * @type {string}
+ * @name pc.2D_DIRECTIONAL
+ */
 export var ANIM_BLEND_2D_DIRECTIONAL = '2D_DIRECTIONAL';
+/**
+ * @constant
+ * @type {string}
+ * @name pc.2D_CARTESIAN
+ */
 export var ANIM_BLEND_2D_CARTESIAN = '2D_CARTESIAN';
+/**
+ * @constant
+ * @type {string}
+ * @name pc.DIRECT
+ */
 export var ANIM_BLEND_DIRECT = 'DIRECT';
-
 /**
  * @constant
  * @type {string}
