@@ -106,6 +106,11 @@ export var ANIM_PARAMETER_BOOLEAN = 'BOOLEAN';
  */
 export var ANIM_PARAMETER_TRIGGER = 'TRIGGER';
 
+export var ANIM_BLEND_1D = '1D';
+export var ANIM_BLEND_2D_DIRECTIONAL = '2D_DIRECTIONAL';
+export var ANIM_BLEND_2D_CARTESIAN = '2D_CARTESIAN';
+export var ANIM_BLEND_DIRECT = 'DIRECT';
+
 /**
  * @constant
  * @type {string}
