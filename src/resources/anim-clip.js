@@ -9,7 +9,7 @@ import { AnimCurve, AnimData, AnimTrack } from '../anim/anim.js';
  * @classdesc Resource handler used for loading {@link pc.AnimClip} resources.
  */
 function AnimClipHandler() {
-    this.retryRequests = false;
+    this.maxRetries = 0;
 }
 
 Object.assign(AnimClipHandler.prototype, {
@@ -23,7 +23,8 @@ Object.assign(AnimClipHandler.prototype, {
 
         // we need to specify JSON for blob URLs
         var options = {
-            retry: this.retryRequests
+            retry: this.maxRetries > 0,
+            maxRetries: this.maxRetries
         };
 
         if (url.load.startsWith('blob:')) {
