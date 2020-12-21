@@ -1005,6 +1005,7 @@ var standard = {
         });
 
         if (!(device.extTextureFloat || (device.extTextureHalfFloat && device.textureHalfFloatUpdatable))) {
+            // use offset and scale for rgb8 format luts
             code += "#define HAS_R8_G8_B8_A8_LUTS\n";
         }
 
@@ -1479,6 +1480,10 @@ var standard = {
                     code += "   addReflectionCC();\n";
                 }
                 code += "   addReflection();\n";
+            }
+
+            if (options.dirLightMap) {
+                code += "   addDirLightMap();\n";
             }
 
             if (hasAreaLights){
