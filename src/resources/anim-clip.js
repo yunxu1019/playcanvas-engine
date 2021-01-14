@@ -1,6 +1,8 @@
 import { http, Http } from '../net/http.js';
 
-import { AnimCurve, AnimData, AnimTrack } from '../anim/anim.js';
+import { AnimCurve } from '../anim/anim-curve.js';
+import { AnimData } from '../anim/anim-data.js';
+import { AnimTrack } from '../anim/anim-track.js';
 
 /**
  * @class
@@ -8,12 +10,12 @@ import { AnimCurve, AnimData, AnimTrack } from '../anim/anim.js';
  * @implements {pc.ResourceHandler}
  * @classdesc Resource handler used for loading {@link pc.AnimClip} resources.
  */
-function AnimClipHandler() {
-    this.maxRetries = 0;
-}
+class AnimClipHandler {
+    constructor() {
+        this.maxRetries = 0;
+    }
 
-Object.assign(AnimClipHandler.prototype, {
-    load: function (url, callback) {
+    load(url, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -38,9 +40,9 @@ Object.assign(AnimClipHandler.prototype, {
                 callback(null, response);
             }
         });
-    },
+    }
 
-    open: function (url, data) {
+    open(url, data) {
         var name = data.name;
         var duration = data.duration;
         var inputs = data.inputs.map(function (input) {
@@ -65,6 +67,6 @@ Object.assign(AnimClipHandler.prototype, {
             curves
         );
     }
-});
+}
 
 export { AnimClipHandler };

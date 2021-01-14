@@ -1,4 +1,4 @@
-import { AnimBinder } from '../../../anim/anim.js';
+import { AnimBinder } from '../../../anim/anim-binder.js';
 
 /**
  * @class
@@ -6,9 +6,9 @@ import { AnimBinder } from '../../../anim/anim.js';
  * @classdesc The AnimProperyLocator encodes and decodes paths to properties in the scene hierarchy.
  * @description Create a new AnimPropertyLocator.
  */
-function AnimPropertyLocator() {}
+class AnimPropertyLocator {
+    constructor() {}
 
-Object.assign(AnimPropertyLocator.prototype, {
     /**
      * @function
      * @name pc.AnimPropertyLocator#encode
@@ -19,13 +19,14 @@ Object.assign(AnimPropertyLocator.prototype, {
      * // returns 'spotLight/light/color.r'
      * encode([['spotLight'], 'light', ['color', 'r']]);
      */
-    encode: function (locator) {
+    encode(locator) {
         return AnimBinder.joinPath([
             AnimBinder.joinPath(locator[0]),
             locator[1],
             AnimBinder.joinPath(locator[2])
         ], '/');
-    },
+    }
+
     /**
      * @function
      * @name pc.AnimPropertyLocator#decode
@@ -36,7 +37,7 @@ Object.assign(AnimPropertyLocator.prototype, {
      * // returns [['spotLight'], 'light', ['color','r']]
      * encode('spotLight/light/color.r');
      */
-    decode: function (locator) {
+    decode(locator) {
         var locatorSections = AnimBinder.splitPath(locator, '/');
         return [
             AnimBinder.splitPath(locatorSections[0]),
@@ -44,6 +45,6 @@ Object.assign(AnimPropertyLocator.prototype, {
             AnimBinder.splitPath(locatorSections[2])
         ];
     }
-});
+}
 
 export { AnimPropertyLocator };
