@@ -20,7 +20,7 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { createShaderFromCode } from '../../graphics/program-lib/utils.js';
 import { shaderChunks } from '../../graphics/program-lib/chunks/chunks.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
@@ -702,7 +702,7 @@ class ParticleEmitter {
         this.resetMaterial();
 
         var wasVisible = this.meshInstance ? this.meshInstance.visible : true;
-        this.meshInstance = new MeshInstance(this.node, mesh, this.material);
+        this.meshInstance = new MeshInstance(mesh, this.material, this.node);
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
         this.meshInstance.cull = true;

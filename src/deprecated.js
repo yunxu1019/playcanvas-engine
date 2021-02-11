@@ -1,9 +1,9 @@
 import { revision, version } from './core/core.js';
 import { string } from './core/string.js';
-import { Color } from './core/color.js';
 import { Timer, now } from "../src/core/time";
 
 import { math } from './math/math.js';
+import { Color } from './math/color.js';
 import { Mat4 } from './math/mat4.js';
 import { Vec2 } from './math/vec2.js';
 import { Vec3 } from './math/vec3.js';
@@ -32,11 +32,11 @@ import {
     TEXTURELOCK_READ, TEXTURELOCK_WRITE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from './graphics/graphics.js';
+} from './graphics/constants.js';
 import { drawQuadWithShader } from './graphics/simple-post-effect.js';
 import { programlib } from './graphics/program-lib/program-lib.js';
 import { shaderChunks } from './graphics/program-lib/chunks/chunks.js';
-import { GraphicsDevice } from './graphics/device.js';
+import { GraphicsDevice } from './graphics/graphics-device.js';
 import { IndexBuffer } from './graphics/index-buffer.js';
 import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from './graphics/post-effect.js';
 import { PostEffectQueue } from './framework/components/camera/post-effect-queue.js';
@@ -62,7 +62,7 @@ import { Mesh } from './scene/mesh.js';
 import { MeshInstance, Command } from './scene/mesh-instance.js';
 import { Model } from './scene/model.js';
 import { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
-import { Picker } from './scene/pick.js';
+import { Picker } from './scene/picker.js';
 import { Scene } from './scene/scene.js';
 import { Skin } from './scene/skin.js';
 import { SkinInstance } from './scene/skin-instance.js';

@@ -30,7 +30,7 @@ class ContainerResource {
     }
 
     instantiateModelEntity(options) {
-        var entity = new pc.Entity();
+        var entity = new Entity();
         entity.addComponent("model", Object.assign( { type: "asset", asset: this.model }, options));
         return entity;
     }
@@ -50,7 +50,7 @@ class ContainerResource {
                     if (mi.node === node) {
 
                         // clone mesh instance
-                        var cloneMi = new MeshInstance(entity, mi.mesh, mi.material);
+                        var cloneMi = new MeshInstance(mi.mesh, mi.material, entity);
 
                         // clone morph instance
                         if (mi.morphInstance) {

@@ -9,7 +9,7 @@ import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
-} from '../../graphics/graphics.js';
+} from '../../graphics/constants.js';
 import { IndexBuffer } from '../../graphics/index-buffer.js';
 import { VertexBuffer } from '../../graphics/vertex-buffer.js';
 import { VertexFormat } from '../../graphics/vertex-format.js';
@@ -411,7 +411,7 @@ class JsonModelParser {
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
 
-            var meshInstance = new MeshInstance(node, mesh, Material.defaultMaterial);
+            var meshInstance = new MeshInstance(mesh, Material.defaultMaterial, node);
 
             if (mesh.skin) {
                 var skinIndex = skins.indexOf(mesh.skin);
