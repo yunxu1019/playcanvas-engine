@@ -6,9 +6,9 @@ import { AnimTarget } from '../evaluator/anim-target.js';
 /**
  * @private
  * @class
- * @name pc.DefaultAnimBinder
- * @implements {pc.AnimBinder}
- * @classdesc Implementation of {@link pc.AnimBinder} for animating a skeleton in the graph-node
+ * @name DefaultAnimBinder
+ * @implements {AnimBinder}
+ * @classdesc Implementation of {@link AnimBinder} for animating a skeleton in the graph-node
  * hierarchy.
  */
 class DefaultAnimBinder {
@@ -138,10 +138,14 @@ class DefaultAnimBinder {
 
             // #ifdef DEBUG
             var fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
-            if (this.visitedFallbackGraphPaths[fallbackGraphPath]) {
+            if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
                 console.warn('Anim Binder: Multiple animation curves with the path ' + fallbackGraphPath + ' are present in the ' + this.graph.path + ' graph which may result in the incorrect binding of animations');
             }
-            this.visitedFallbackGraphPaths[fallbackGraphPath] = true;
+            if (!Number.isFinite(this.visitedFallbackGraphPaths[fallbackGraphPath])) {
+                this.visitedFallbackGraphPaths[fallbackGraphPath] = 0;
+            } else {
+                this.visitedFallbackGraphPaths[fallbackGraphPath]++;
+            }
             // #endif
         }
         return node;

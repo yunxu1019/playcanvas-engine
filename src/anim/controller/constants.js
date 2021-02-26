@@ -150,3 +150,5 @@ export const ANIM_STATE_END = 'END';
  * @description Used to indicate any state in an anim state graph layer.
  */
 export const ANIM_STATE_ANY = 'ANY';
+
+export const ANIM_CONTROL_STATES = [ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY];

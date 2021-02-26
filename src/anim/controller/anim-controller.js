@@ -1,25 +1,25 @@
 import { AnimClip } from '../evaluator/anim-clip.js';
 import { AnimState } from './anim-state.js';
-import { AnimBlendTree } from './anim-blend-tree.js';
+import { AnimNode } from './anim-node.js';
 import { AnimTransition } from './anim-transition.js';
 
 import {
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 
 /**
  * @private
  * @class
- * @name pc.AnimController
+ * @name AnimController
  * @classdesc The AnimController manages the animations for it's entity, based on the provided state graph and parameters. It's update method determines which state the controller should be in based on the current time, parameters and available states / transitions. It also ensures the AnimEvaluator is supplied with the correct animations, based on the currently active state.
  * @description Create a new AnimController.
- * @param {pc.animEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
+ * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current playing animation keyframes and update the entities properties based on the current animation values.
  * @param {object[]} states - The list of states used to form the controller state graph.
  * @param {object[]} transitions - The list of transitions used to form the controller state graph.
  * @param {object[]} parameters - The anim components parameters.
- * @param {boolean} activate - Determines whether the anim controller should automatically play once all pc.AnimNodes are assigned animations.
+ * @param {boolean} activate - Determines whether the anim controller should automatically play once all {@link AnimNodes} are assigned animations.
  */
 class AnimController {
     constructor(animEvaluator, states, transitions, parameters, activate) {
@@ -420,6 +420,9 @@ class AnimController {
     }
 
     removeNodeAnimations(nodeName) {
+        if (ANIM_CONTROL_STATES.indexOf(nodeName) !== -1) {
+            return;
+        }
         var state = this._findState(nodeName);
         if (!state) {
             // #ifdef DEBUG
@@ -429,6 +432,7 @@ class AnimController {
         }
 
         state.animations = [];
+        return true;
     }
 
     play(stateName) {
@@ -517,7 +521,7 @@ class AnimController {
                 }
             }
         } else {
-            if (this.activeState._blendTree.constructor === AnimBlendTree) {
+            if (this.activeState._blendTree.constructor !== AnimNode) {
                 state = this.activeState;
                 for (i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
